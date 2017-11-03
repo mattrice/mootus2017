@@ -1,0 +1,8 @@
+FROM percona/percona-xtradb-cluster:5.6.37
+MAINTAINER Your Name Here [your_email@example.com]
+
+# Config file(s)
+#   - MySQL
+COPY database.cnf             /etc/mysql/my.cnf
+
+CMD ["entrypoint.sh"]

@@ -1,0 +1,19 @@
+FROM your.docker.registry/moodle/production:latest
+MAINTAINER Your Name Here [your_email@example.com]
+
+# Append settings to Moodle config
+## Override email behavior
+
+# RUN echo "\$CFG->noemailever = true;" >> /var/moodle/config.php
+RUN echo "\$CFG->divertallemailsto = 'email_recipient@example.com';" >> /var/moodle/config.php
+
+## Force debugging ON
+RUN echo "@error_reporting(E_ALL | E_STRICT); // NOT FOR PRODUCTION SERVERS!" >> /var/moodle/config.php
+RUN echo "@ini_set('display_errors', '1');    // NOT FOR PRODUCTION SERVERS!" >> /var/moodle/config.php
+RUN echo "\$CFG->debug = (E_ALL | E_STRICT);   // === DEBUG_DEVELOPER - NOT FOR PRODUCTION SERVERS!" >> /var/moodle/config.php
+RUN echo "\$CFG->debugdisplay = 1;             // NOT FOR PRODUCTION SERVERS!" >> /var/moodle/config.php
+
+# Run custom script on container start
+COPY moodle_entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]

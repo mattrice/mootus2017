@@ -1,0 +1,85 @@
+FROM ubuntu:16.04
+
+# Ensure correct ownership/permissions
+# MUST be done before VOLUME command
+RUN mkdir /var/moodledata /var/log/apache2 && chmod -R 777 /var/moodledata
+RUN chown -R www-data.www-data /var/moodledata /var/log/apache2
+
+VOLUME ["/var/moodledata", "/var/log/apache2"]
+EXPOSE 80
+
+# Add non-standard package repos
+#   - apt-add-repository command itself
+RUN apt-get update \
+    && apt-get install -y software-properties-common
+#   - git
+RUN apt-add-repository -y ppa:git-core/ppa
+#   - php5
+RUN LC_ALL=C.UTF-8 add-apt-repository ppa:ondrej/php
+
+# Prevent dpkg from installing local documentation
+COPY 01_nodoc /etc/dpkg/dpkg.cfg.d/01_nodoc
+
+# Install packages
+RUN apt-get update \
+    && apt-get install -y \
+        # Ghostscript - order (i.e. before imagemagick) is important!
+        ghostscript \
+        libgs-dev \
+        imagemagick \
+        # System Libraries
+        apache2 \
+        cron \
+        git \
+        mysql-client-core-5.7 \
+        netcat-openbsd \
+        sendmail \
+        supervisor \
+        unoconv \
+        zip \
+        # PHP and PHP modules
+        php5.6 \
+        php5.6-curl \
+        php5.6-dev \
+        php5.6-gd \
+        php5.6-intl \
+        php5.6-ldap \
+        php5.6-mbstring \
+        php5.6-mcrypt \
+        php5.6-mysql \
+        php5.6-pspell \
+        php5.6-soap \
+        php5.6-xmlrpc \
+        php5.6-xmlreader \
+        php5.6-xsl \
+        php5.6-zip
+
+# Avoid installing /usr/share/doc packages, which only take up room unnecessarily
+RUN apt-get --no-install-recommends install -y \
+        texlive
+
+# Cleanup apt-get
+RUN rm -rf /var/lib/apt/lists/*
+
+# Config files
+#   - PHP
+COPY moodle-php.ini         /etc/php/5.6/apache2/php.ini
+#   - Apache
+COPY moodle-apache.conf     /etc/apache2/sites-available/moodle.conf
+#   - LDAP
+COPY moodle-ldap.conf       /etc/ldap/ldap.conf
+
+RUN a2enmod remoteip
+RUN a2ensite moodle
+RUN a2dissite 000-default
+
+# Moodle source and config
+COPY moodle/                /var/moodle/
+# Copy config.php after to ensure the values we want are sent to the container
+COPY moodle-config.php      /var/moodle/config.php
+
+RUN chown -R www-data.www-data /var/moodle
+RUN chown -R www-data.www-data /var/moodledata
+
+# Run apache in the foreground
+CMD ["/usr/sbin/apache2ctl", "-D", "FOREGROUND"]
