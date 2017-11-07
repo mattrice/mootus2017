@@ -1,0 +1,1 @@
+The backup server runs a slightly modified version of the production Moodle container. Setting up a Docker container registy and populating the registry with a production-ready container is left as an exercise; however, a sample Moodle Dockerfile ([Dockerfile_moodle_base](Dockerfile_moodle_base)) is provided for reference

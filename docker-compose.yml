@@ -1,0 +1,29 @@
+version: '2'
+services:
+    primary:
+        restart: always
+        build:
+            context: .
+            dockerfile: Dockerfile_moodle_backup
+        links:
+            - mysql
+        environment:
+            MOODLE_DB_NAME:         "${MOODLE_DB_NAME}"
+            MOODLE_DB_USER:         "${MOODLE_DB_USER}"
+            MOODLE_DB_PASS:         "${MOODLE_DB_PASS}"
+        ports:
+            - "8080:80"
+        volumes:
+            - "/var/moodledata:/var/moodledata"
+    mysql:
+        restart: always
+        build:
+            context: .
+            dockerfile: Dockerfile_database
+        environment:
+            CLUSTER_NAME:           "${CLUSTER_NAME}"
+            MYSQL_ROOT_PASSWORD:    "${MYSQL_ROOT_PASSWORD}"
+        ports:
+            - "3306:3306"
+        volumes:
+            - "/var/moodle/mysql:/var/lib/mysql"
